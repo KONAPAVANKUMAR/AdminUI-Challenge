@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="css/bootstrap.min-3.css">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+
+    <title>Admin</title>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+          <a class="navbar-brand" href="#">Admin</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+      
+          <div class="collapse navbar-collapse" id="navbarColor01">
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link active" href="#">Home
+                  <span class="visually-hidden">(current)</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Features</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Pricing</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">About</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item" href="#">Action</a>
+                  <a class="dropdown-item" href="#">Another action</a>
+                  <a class="dropdown-item" href="#">Something else here</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#">Separated link</a>
+                </div>
+              </li>
+            </ul>
+            <!-- <form class="d-flex">
+              <input class="form-control me-sm-2" type="text" placeholder="Search">
+              <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form> -->
+          </div>
+        </div>
+      </nav>
+
+
+
+
+      <div id="app">
+        
+        <div class="container my-4" style="width: fit-content;">
+            <!-- search bar -->
+            <div class="my-2">
+                <form @submit.prevent="submitSearch" class="d-flex justify-content-end">
+                    <input class="form-control" v-model="searchedText" style="width: 20vw;min-width: 200px;" type="text" placeholder="Name,Email or Role">
+                    <button  type="submit" class="btn btn-light">Search</button>
+                </form>
+            </div>
+            <!-- table -->
+            <table class="table table-striped" style="width: 70vw;">
+                <tr class="bg-primary">
+                    <th></th>
+                    <th style="color: white;">Name</th>
+                    <th style="color: white;">Email</th>
+                    <th style="color: white;">Role</th>
+                </tr>
+                
+                <tr v-for="(user, index) in users" :key="index">
+                    <td><input type="checkbox" :id="'checkBox'+user.id" :value="user.name" name="" v-model="checkedUsers"></td>
+                    <td>{{user.name}}</td>
+                    <td>{{user.email}}</td>
+                    <td>{{user.role}}</td>
+                </tr>
+            </table>
+
+            <!-- pagination -->
+            <div class="container" style="width: fit-content;">
+                <ul class="pagination">
+                    <div v-for="page in pages">
+                        <li :id="'page_' + page" v-if="page!=0" class="page-item">
+                            <a class="page-link" @click="switchToPage(page)" href="#">{{page}}</a>
+                        </li>
+
+                    </div>
+                    
+
+                </ul>
+              </div>
+
+              <!-- checkedUsers -->
+        </div>
+
+    
+      </div>
+      
+
+    
+</body>
+</html>
+
+<!-- vuejs cdn -->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        delimiters : ['{{', '}}'],
+        data: {
+            users: [],
+            usersBackup : [],
+            pages : [],
+            searchedUsers : [],
+            searchedText : '',
+            checkedUsers : [],
+            checkedUsersInCurrentPage : []
+            },
+        methods: {
+            getUsers: function() {
+                url = 'https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json'
+                fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    this.users = data;
+                }).then(() => {
+                    this.pages = Array.from(Array(Math.ceil(this.users.length / 10)).keys());
+                }).then(() => {
+                    this.usersBackup = this.users;
+                }).then(() => {
+                    this.switchToPage(1);
+                })
+            },
+
+            resetCheckboxes : function(){
+                var checkboxes = document.getElementsByTagName('input');
+                for (var i = 0; i < checkboxes.length; i++) {
+                    if (checkboxes[i].type == 'checkbox') {
+                        checkboxes[i].checked = false;
+                    }
+                }
+              },
+
+
+            switchToPage : function(page){
+
+
+                this.pages.forEach(page => {
+                    if(page!=0){
+                        document.getElementById('page_' + page).classList.remove('active');
+                    }
+                    
+                });
+
+                document.getElementById('page_'+page).classList.add('active');
+                if(this.searchedText==''){
+                    this.users = this.usersBackup;
+                }
+                else{
+                  this.users = this.searchedUsers
+                }
+                
+                this.users = this.users.slice((page - 1) * 10, page * 10);
+            },
+
+            submitSearch : function(){
+                if(this.searchedUsers==''){
+                    this.users = this.usersBackup;
+                    this.switchToPage(1);
+                }
+                this.users = this.usersBackup
+                this.users = this.users.filter(user => {
+                    return user.name.toLowerCase().includes(this.searchedText.toLowerCase()) || user.email.toLowerCase().includes(this.searchedText.toLowerCase()) || user.role.toLowerCase().includes(this.searchedText.toLowerCase());
+                })
+                this.searchedUsers = this.users
+                console.log(this.users)
+                this.pages = Array.from(Array(Math.ceil(this.users.length / 10)).keys());
+                if(this.pages.length==1){
+                    this.pages.push(1)
+                }
+                this.pages.forEach(page => {
+                    if(page!=0){
+                      try{
+                        document.getElementById('page_' + page).classList.remove('active');
+                      }
+                      catch(e){
+                        console.log('no page')
+                      }
+                        
+                    }
+                })
+                document.getElementById('page_'+1).classList.add('active');
+                page = 1
+                this.users = this.users.slice((page - 1) * 10, page * 10);
+            }
+
+
+        },
+        mounted: function() {
+            this.getUsers();
+        }
+      
+    })
+</script>
+
